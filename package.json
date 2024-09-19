@@ -1,6 +1,6 @@
 {
   "name": "@trynova-ai/auto-ids-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automatically inject ids into elements at runtime",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
