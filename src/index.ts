@@ -22,30 +22,37 @@ export default function testDataIdObserver(): MutationObserver {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach((node) => {
-          if ((node as HTMLElement).nodeType === 1) { // Only process element nodes
+          try {
+            if ((node as HTMLElement).nodeType === 1) { // Only process element nodes
+              const htmlNode = node as HTMLElement;
 
-            const htmlNode = node as HTMLElement;
+              // Function to process each element for data-testid
+              const processElement = (element: HTMLElement) => {
+                const elementsToCheck = ['input', 'button', 'a'];
+                elementsToCheck.forEach(selector => {
+                  try {
+                    // Check if the element matches the selector or is the element itself
+                    const foundElement = element.querySelector(selector) || (element.tagName.toUpperCase() === selector.toUpperCase() && element);
+                    if (foundElement && !(foundElement as HTMLElement).hasAttribute('data-testid')) {
+                      // Assign a generated data-testid if it doesn't already have one
+                      (foundElement as HTMLElement).setAttribute('data-testid', generateTestId(foundElement as HTMLElement));
+                    }
+                  } catch (error) {
+                    console.error('Error processing element for data-testid:', error);
+                  }
+                });
+              };
 
-            // Function to process each element for data-testid
-            const processElement = (element: HTMLElement) => {
-              const elementsToCheck = ['input', 'button', 'a'];
-              elementsToCheck.forEach(selector => {
-                // Check if the element matches the selector or is the element itself
-                const foundElement = element.querySelector(selector) || (element.tagName.toUpperCase() === selector.toUpperCase() && element);
-                if (foundElement && !(foundElement as HTMLElement).hasAttribute('data-testid')) {
-                  // Assign a generated data-testid if it doesn't already have one
-                  (foundElement as HTMLElement).setAttribute('data-testid', generateTestId(foundElement as HTMLElement));
-                }
+              // Process the newly added node and its children
+              processElement(htmlNode);
+
+              // Also check if any of its descendants should be processed
+              htmlNode.querySelectorAll('input, button, a').forEach((element) => {
+                processElement(element as HTMLElement);
               });
-            };
-
-            // Process the newly added node and its children
-            processElement(htmlNode);
-
-            // Also check if any of its descendants should be processed
-            htmlNode.querySelectorAll('input, button, a').forEach((element) => {
-              processElement(element as HTMLElement);
-            });
+            }
+          } catch (error) {
+            console.error('Error processing node in MutationObserver:', error);
           }
         });
       }
